@@ -13,14 +13,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Type;
 
 /**
- * Provides a {@code TypeAdapterFactory} for deserializing those types that have a constructor
- * annotated with {@link JsonConstructor}.
+ * Provides a {@link TypeAdapter} and {@link TypeAdapterFactory} for deserializing those types
+ * that have a constructor annotated with {@link JsonConstructor}.
  *
  * @author Brandon Mintern
  */
 public class JsonConstructorTypeAdapter<T> extends TypeAdapter<T> {
   public static final TypeAdapterFactory FACTORY = new TypeAdapterFactory() {
-    @Override
     @SuppressWarnings("unchecked")
     public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
       Class<? super T> rawType = type.getRawType();
@@ -63,7 +62,7 @@ public class JsonConstructorTypeAdapter<T> extends TypeAdapter<T> {
         this.gson = gson;
       } else {
         throw new IllegalStateException("Second (optional) argument of constructor annotated with "
-            + "@JsonConstructor must a Gson.");
+            + "@JsonConstructor must be of type Gson.");
       }
     } else {
       this.gson = null;
@@ -107,6 +106,9 @@ public class JsonConstructorTypeAdapter<T> extends TypeAdapter<T> {
       }
       if (cause instanceof Error) {
         throw (Error) cause;
+      }
+      if (cause instanceof IOException) {
+        throw (IOException) cause;
       }
       // TODO: JsonParseException ?
       throw new RuntimeException("Failed to invoke " + constructor + " with " + args.length
