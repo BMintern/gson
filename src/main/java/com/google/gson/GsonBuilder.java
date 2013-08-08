@@ -83,6 +83,7 @@ public final class GsonBuilder {
   private boolean escapeHtmlChars = true;
   private boolean prettyPrinting;
   private boolean generateNonExecutableJson;
+  private boolean enableConstructorScanning;
 
   /**
    * Creates a GsonBuilder instance that can be used to build Gson with various configuration
@@ -530,6 +531,17 @@ public final class GsonBuilder {
   }
 
   /**
+   * Enables the check for {@code @JsonConstructor} annotation scanning during deserialization. See
+   * {@link com.google.gson.annotations.JsonConstructor}.
+   *
+   * @return a reference to this {@code GsonBuilder} object to fulfill the "Builder" pattern
+   */
+  public GsonBuilder enableConstructorScanning() {
+    this.enableConstructorScanning = true;
+    return this;
+  }
+
+  /**
    * Creates a {@link Gson} instance based on the current configuration. This method is free of
    * side-effects to this {@code GsonBuilder} instance and hence can be called multiple times.
    *
@@ -545,7 +557,8 @@ public final class GsonBuilder {
     return new Gson(excluder, fieldNamingPolicy, instanceCreators,
         serializeNulls, complexMapKeySerialization,
         generateNonExecutableJson, escapeHtmlChars, prettyPrinting,
-        serializeSpecialFloatingPointValues, longSerializationPolicy, factories);
+        serializeSpecialFloatingPointValues, enableConstructorScanning,
+        longSerializationPolicy, factories);
   }
 
   private void addTypeAdaptersForDate(String datePattern, int dateStyle, int timeStyle,
