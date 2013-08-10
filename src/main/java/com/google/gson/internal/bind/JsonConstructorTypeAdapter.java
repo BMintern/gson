@@ -32,14 +32,16 @@ public class JsonConstructorTypeAdapter<T> extends TypeAdapter<T> {
     }
   };
 
-  // holds the Gson instance if the constructor requires one for deserialization; otherwise, null
   private final Gson gson;
   private final Constructor<T> constructor;
-  // the delegate adapter to use during serialization
-  private final TypeAdapter<T> delegateAdapter;
+  private final TypeToken<T> typeToken;
   // the adapter to use for deserializing the first constructor argument, or null if the first
   // argument is a JsonReader
   private final TypeAdapter<?> argAdapter;
+  // true iff the constructor takes a gson argument
+  private final boolean takesGson;
+  // the delegate adapter to use during serialization; initialized lazily
+  private TypeAdapter<T> delegateAdapter;
 
   private JsonConstructorTypeAdapter(Gson gson, TypeToken<T> type, Constructor<T> constructor) {
     Type[] params = constructor.getGenericParameterTypes();
@@ -59,34 +61,35 @@ public class JsonConstructorTypeAdapter<T> extends TypeAdapter<T> {
     }
     if (params.length > 1) {
       if (params[1] == Gson.class) {
-        this.gson = gson;
+        takesGson = true;
       } else {
         throw new IllegalStateException("Second (optional) argument of constructor annotated with "
             + "@JsonConstructor must be of type Gson.");
       }
     } else {
-      this.gson = null;
+      takesGson = false;
     }
+    this.gson = gson;
     if (!constructor.isAccessible()) {
       constructor.setAccessible(true);
     }
     this.constructor = constructor;
-    delegateAdapter = gson.getDelegateAdapter(FACTORY, type);
+    typeToken = type;
   }
 
   @Override
   public void write(JsonWriter out, T value) throws IOException {
-    delegateAdapter.write(out, value);
+    delegate().write(out, value);
   }
 
   @Override
   public T read(JsonReader in) throws IOException {
     Object[] args;
-    if (gson == null) {
-      args = new Object[1];
-    } else {
+    if (takesGson) {
       args = new Object[2];
       args[1] = gson;
+    } else {
+      args = new Object[1];
     }
     if (argAdapter == null) {
       args[0] = in;
@@ -116,5 +119,12 @@ public class JsonConstructorTypeAdapter<T> extends TypeAdapter<T> {
     } catch (IllegalAccessException e) {
       throw new AssertionError(e);
     }
+  }
+
+  private TypeAdapter<T> delegate() {
+    if (delegateAdapter == null) {
+      delegateAdapter = gson.getDelegateAdapter(FACTORY, typeToken);
+    }
+    return delegateAdapter;
   }
 }
