@@ -23,7 +23,9 @@ import com.google.gson.internal.Streams;
 import com.google.gson.internal.bind.ArrayTypeAdapter;
 import com.google.gson.internal.bind.CollectionTypeAdapterFactory;
 import com.google.gson.internal.bind.DateTypeAdapter;
+import com.google.gson.internal.bind.JsonSerializationTypeAdapter;
 import com.google.gson.internal.bind.JsonTreeReader;
+import com.google.gson.internal.bind.JsonTreeSerializationTypeAdapter;
 import com.google.gson.internal.bind.JsonTreeWriter;
 import com.google.gson.internal.bind.MapTypeAdapterFactory;
 import com.google.gson.internal.bind.ObjectTypeAdapter;
@@ -173,7 +175,7 @@ public final class Gson {
   public Gson() {
     this(Excluder.DEFAULT, FieldNamingPolicy.IDENTITY,
         Collections.<Type, InstanceCreator<?>>emptyMap(), false, false, DEFAULT_JSON_NON_EXECUTABLE,
-        true, false, false, LongSerializationPolicy.DEFAULT,
+        true, false, false, false, LongSerializationPolicy.DEFAULT,
         Collections.<TypeAdapterFactory>emptyList());
   }
 
@@ -181,7 +183,7 @@ public final class Gson {
       final Map<Type, InstanceCreator<?>> instanceCreators, boolean serializeNulls,
       boolean complexMapKeySerialization, boolean generateNonExecutableGson, boolean htmlSafe,
       boolean prettyPrinting, boolean serializeSpecialFloatingPointValues,
-      LongSerializationPolicy longSerializationPolicy,
+      boolean enableSerializationInterfaces, LongSerializationPolicy longSerializationPolicy,
       List<TypeAdapterFactory> typeAdapterFactories) {
     this.constructorConstructor = new ConstructorConstructor(instanceCreators);
     this.serializeNulls = serializeNulls;
@@ -233,6 +235,12 @@ public final class Gson {
     factories.add(ArrayTypeAdapter.FACTORY);
     factories.add(TypeAdapters.ENUM_FACTORY);
     factories.add(TypeAdapters.CLASS_FACTORY);
+
+    if (enableSerializationInterfaces) {
+      // prefer JsonReader-consuming interface
+      factories.add(JsonSerializationTypeAdapter.FACTORY);
+      factories.add(JsonTreeSerializationTypeAdapter.FACTORY);
+    }
 
     // type adapters for composite and user-defined types
     factories.add(new CollectionTypeAdapterFactory(constructorConstructor));

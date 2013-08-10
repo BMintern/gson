@@ -83,6 +83,7 @@ public final class GsonBuilder {
   private boolean escapeHtmlChars = true;
   private boolean prettyPrinting;
   private boolean generateNonExecutableJson;
+  private boolean enableSerializationInterfaces;
 
   /**
    * Creates a GsonBuilder instance that can be used to build Gson with various configuration
@@ -363,6 +364,11 @@ public final class GsonBuilder {
     return this;
   }
 
+  public GsonBuilder enableSerializationInterfaces() {
+    this.enableSerializationInterfaces = true;
+    return this;
+  }
+
   /**
    * Configures Gson to serialize {@code Date} objects according to the pattern provided. You can
    * call this method or {@link #setDateFormat(int)} multiple times, but only the last invocation
@@ -545,7 +551,8 @@ public final class GsonBuilder {
     return new Gson(excluder, fieldNamingPolicy, instanceCreators,
         serializeNulls, complexMapKeySerialization,
         generateNonExecutableJson, escapeHtmlChars, prettyPrinting,
-        serializeSpecialFloatingPointValues, longSerializationPolicy, factories);
+        serializeSpecialFloatingPointValues, enableSerializationInterfaces,
+        longSerializationPolicy, factories);
   }
 
   private void addTypeAdaptersForDate(String datePattern, int dateStyle, int timeStyle,
